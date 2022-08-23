@@ -1,0 +1,53 @@
+name: "Validate Terraform"
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "iac/terraform/**"
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "iac/terraform"
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    outputs:
+      RESOURCES_PREFIX: ${{ steps.resources_prefix.outputs.result }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Get repo name
+        uses: actions/github-script@v5
+        id: resources_prefix
+        with:
+          result-encoding: string
+          script: return context.repo.repo.toLowerCase()
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.7
+      - name: Lint Terraform
+        run: terraform fmt -check
+      - name: Initialize terraform
+        run: terraform init -backend=false
+      - name: Validate terraform
+        run: terraform validate
+
+      - name: Validate configurations
+        env:
+          LOCATION: ${{ secrets.LOCATION }}
+          RESOURCES_PREFIX: ${{ steps.resources_prefix.outputs.result }}
+        run: |
+          if [ ${#LOCATION} -eq 0 ]; then
+              _error "Required LOCATION parameter is not set!"
+              exit 1
+          fi
+          if [ ${#RESOURCES_PREFIX} -eq 0 ]; then
+              _error "Required RESOURCES_PREFIX parameter is not set!"
+              exit 1
+          fi
