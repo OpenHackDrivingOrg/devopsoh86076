@@ -6,7 +6,8 @@ on:
       - main
     paths:
       - "iac/terraform/**"
-
+  workflow_dispatch:
+  
 defaults:
   run:
     shell: bash
