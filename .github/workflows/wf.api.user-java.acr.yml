@@ -1,0 +1,43 @@
+name: Build and deploy user-java api to an Azure Web App
+
+env:
+  # AZURE_WEBAPP_NAME: your-app-name 
+  WORKING_DIRECTORY: "apis/user-java"
+  IMAGE_TAG: ${{ GITHUB.SHA }}
+  API_NAME: user-java
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "apis/user-java/**"  
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: ACR build
+        id: acr
+        uses: azure/acr-build@v1
+        with:
+          service_principal: ${{ secrets.ARM_CLIENT_ID  }}
+          service_principal_password: ${{ secrets.ARM_CLIENT_SECRET  }}
+          tenant: ${{ secrets.ARM_TENANT_ID  }}
+          registry: ${{ secrets.REGISTRY }}
+          repository: ${{ secrets.REPOSITORY }}
+          image: user-java
+          tag: ${{ env.IMAGE_TAG }}
+          git_access_token: ${{ secrets.git_access_token }}
+          folder: apis/user-java/
+          dockerfile: Dockerfile
+          branch: main
+
+ 
