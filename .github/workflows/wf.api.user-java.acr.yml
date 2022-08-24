@@ -1,10 +1,12 @@
-name: Build and deploy user-java api to an Azure Web App
+name: Build and deploy user-java api container image to an Azure Web App
 
 env:
   # AZURE_WEBAPP_NAME: your-app-name 
   WORKING_DIRECTORY: "apis/user-java"
   IMAGE_TAG: ${{ GITHUB.SHA }}
-  API_NAME: user-java
+  IMAGE: user-java
+  API_NAME: userjava
+  RESOURCES_PREFIX: devopsoh86076
 
 on:
   push:
@@ -16,9 +18,11 @@ on:
 
 permissions:
   contents: read
+  
 
 jobs:
   build:
+    name: Build and publish container image
     runs-on: ubuntu-latest
 
     steps:
@@ -33,11 +37,50 @@ jobs:
           tenant: ${{ secrets.ARM_TENANT_ID  }}
           registry: ${{ secrets.REGISTRY }}
           repository: ${{ secrets.REPOSITORY }}
-          image: user-java
+          image: ${{ env.IMAGE }}
           tag: ${{ env.IMAGE_TAG }}
           git_access_token: ${{ secrets.git_access_token }}
           folder: apis/user-java/
           dockerfile: Dockerfile
           branch: main
+
+  staging:
+     name: Deploy container image in staging
+     needs: build
+     runs-on: ubuntu-latest
+     
+     steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: azure/docker-login@v1
+        with:
+         login-server: ${{ secrets.REGISTRY }}
+         username: ${{ secrets.ARM_CLIENT_ID }}
+         password: ${{ secrets.ARM_CLIENT_SECRET }}
+    
+      # Deploy new image to WebApp
+      - name: Deploy new image to WebApp
+        id: webapp-staging
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.RESOURCES_PREFIX }}${{ env.API_NAME }}
+          slot-name: staging
+          images: ${{ secrets.REGISTRY }}/${{ secrets.REPOSITORY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+          
+       # Service health check
+      - name: Check the deployed service health
+        uses: jtalk/url-health-check-action@v2
+        with:
+          url: ${{ steps.webapp-staging.outputs.webapp-url }}/api/healthcheck/user
+          follow-redirect: true
+          max-attempts: 60
+          retry-delay: 10s
+          retry-all: true         
+
+          
+          
 
  
