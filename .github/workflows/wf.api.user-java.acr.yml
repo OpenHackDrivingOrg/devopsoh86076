@@ -80,7 +80,27 @@ jobs:
           retry-delay: 10s
           retry-all: true         
 
-          
-          
+  production:
+     name: Deploy container image in production
+     needs: 
+            - build
+            - staging
+     runs-on: ubuntu-latest
+     environment: production
+     steps:
+      # Login Azure
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
- 
+      # Swap WebApp Slot
+      - name: Swap webapp slot
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az webapp deployment slot swap \
+              --resource-group ${{ env.RESOURCES_PREFIX }}rg \
+              --name ${{ env.RESOURCES_PREFIX }}${{ env.API_NAME }} \
+              --slot staging \
+              --target-slot production
