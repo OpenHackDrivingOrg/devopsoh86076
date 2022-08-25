@@ -11,6 +11,7 @@ on:
       - "apis/user-java/**"
   workflow_dispatch:
 
+
 defaults:
   run:
     working-directory: "apis/user-java"
@@ -48,6 +49,8 @@ jobs:
     - name: Run Gitleaks
       id: gitleaks
       uses: DariuszPorowski/github-action-gitleaks@v2
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
        report_format: "sarif"
        fail: false
