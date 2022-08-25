@@ -17,6 +17,24 @@ defaults:
     working-directory: "apis/user-java"
     
 jobs:
+
+  scanning:
+    name: GitGuardian scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # fetch all history so multiple commits can be scanned
+      - name: GitGuardian scan
+        uses: GitGuardian/ggshield-action@master
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+          
   buildtest:
     name: "Build and Test"
     runs-on: ubuntu-latest
@@ -46,34 +64,7 @@ jobs:
       with:
           report_paths: '**/build/test-results/test/TEST-*.xml'      
       
-    - name: Run Gitleaks
-      id: gitleaks
-      uses: DariuszPorowski/github-action-gitleaks@v2
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-       report_format: "sarif"
-       fail: false
-
-    - name: Get the output from the gitleaks step
-      run: |
-        echo "exitcode: ${{ steps.gitleaks.outputs.exitcode }}"
-        echo "result: ${{ steps.gitleaks.outputs.result }}"
-        echo "output: ${{ steps.gitleaks.outputs.output }}"
-        echo "command: ${{ steps.gitleaks.outputs.command }}"
-        echo "report: ${{ steps.gitleaks.outputs.report }}"
-
-    - name: Upload Gitleaks SARIF report to code scanning service
-      if: steps.gitleaks.outputs.exitcode == 1
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-          # Path to SARIF file relative to the root of the repository
-          sarif_file: gitleaks-report.sarif
-          # Optional category for the results
-          # Used to differentiate multiple results for one commit
-          category: my-analysis-tool
-        
-
+    
     - name: "Create an issue (bug)"
       if: failure() && github.event_name != 'pull_request'
       run: |
