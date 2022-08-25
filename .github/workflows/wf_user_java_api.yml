@@ -37,6 +37,7 @@ jobs:
           
   buildtest:
     name: "Build and Test"
+    needs: scanning
     runs-on: ubuntu-latest
     permissions:
       contents: read
