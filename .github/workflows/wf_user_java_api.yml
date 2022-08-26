@@ -58,10 +58,19 @@ jobs:
     - name: "Run Tests with Maven"
       run: mvn test     
     
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
+    - name: Run Coverage
+      run: |
+          chmod +x gradlew
+          ./gradlew testCoverage
+
+    - name: Add coverage to PR
+      id: jacoco
+      uses: madrapps/jacoco-report@v1.2
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+          paths: ${{ github.workspace }}/build/reports/jacoco/testCoverage/testCoverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v3
