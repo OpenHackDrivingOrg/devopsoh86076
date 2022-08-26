@@ -54,7 +54,7 @@ jobs:
      
       - uses: Azure/login@v1
         with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
             
       - name: Get Secrets from KV
         uses: Azure/get-keyvault-secrets@v1
