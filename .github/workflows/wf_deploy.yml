@@ -43,6 +43,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.7
+          
       - name: Terraform Init
         run: |
           terraform init \
@@ -51,6 +52,10 @@ jobs:
             -backend-config=container_name="${{ secrets.TFSTATE_STORAGE_CONTAINER_NAME }}" \
             -backend-config=key="${{ secrets.TFSTATE_KEY }}"
      
+      - uses: Azure/login@v1
+        with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }
+            
       - name: Get Secrets from KV
         uses: Azure/get-keyvault-secrets@v1
         with:
