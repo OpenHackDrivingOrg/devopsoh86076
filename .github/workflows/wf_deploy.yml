@@ -68,16 +68,14 @@ jobs:
         continue-on-error: true
         shell: bash +e {0}
         run: |
+          terraform force-unlock -force d0d0d7af-f306-114d-1e1d-8c98c1625150 
           terraform plan \
             --detailed-exitcode \
             -var="location=${LOCATION}" \
             -var="resources_prefix=${{ steps.resources_prefix.outputs.result }}" \
             -var="mssql_server_administrator_login_password=${{ steps.sql_password.outputs.password }}"
           echo "::set-output name=exit_code::$?"
-      - name: check exit code
-        if: always()
-        run: |
-          echo "exit_code : ${{ steps.tfplan.outputs.exit_code }}"
+      
   deploy:
     name: Deploy Changes
     runs-on: ubuntu-latest
@@ -104,6 +102,7 @@ jobs:
             -backend-config=key="${{ secrets.TFSTATE_KEY }}"
       - name: Terraform Apply
         run: |
+          terraform force-unlock -force d0d0d7af-f306-114d-1e1d-8c98c1625150
           terraform apply \
             -auto-approve \
             -var="location=${{ secrets.LOCATION }}" \
