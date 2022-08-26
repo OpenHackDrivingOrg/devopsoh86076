@@ -57,7 +57,11 @@ jobs:
       
     - name: "Run Tests with Maven"
       run: mvn test     
-      
+    
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v3
