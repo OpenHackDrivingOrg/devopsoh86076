@@ -68,7 +68,6 @@ jobs:
         continue-on-error: true
         shell: bash +e {0}
         run: |
-          terraform force-unlock -force d0d0d7af-f306-114d-1e1d-8c98c1625150 
           terraform plan \
             --detailed-exitcode \
             -var="location=${LOCATION}" \
@@ -102,7 +101,6 @@ jobs:
             -backend-config=key="${{ secrets.TFSTATE_KEY }}"
       - name: Terraform Apply
         run: |
-          terraform force-unlock -force d0d0d7af-f306-114d-1e1d-8c98c1625150
           terraform apply \
             -auto-approve \
             -var="location=${{ secrets.LOCATION }}" \
