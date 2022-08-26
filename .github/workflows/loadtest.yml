@@ -1,4 +1,4 @@
-# File: .github/workflows/workflow.yml
+name: Load Test
 
 on:
   workflow_dispatch:
